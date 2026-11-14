@@ -1,0 +1,1 @@
+Notes : réviser python et les regex.
