@@ -353,8 +353,20 @@ F18 à F21 seront attribuées selon les disponibilités, une fois P3 terminé.
 
 ## Avancement
 
-| Fonctionnalité | État au 16/11/2026 |
-|---|---|
-| F3 Corpus par répertoire | fait (parcours, sous-répertoires, lecture UTF-8 puis latin-1) |
-| F1, F2, F4 à F12 | à faire |
-| F13 à F21 | à faire |
+État au 16/11/2026. La commande `python main.py exemples -r --mot python -o resultats.csv` fonctionne de bout en bout.
+
+| Fonctionnalité | État | Détail |
+|---|---|---|
+| F1 Ligne de commande | en partie | dossier, `-r`, `--mot` (répétable), `-o` ; restent les autres options, les messages d'erreur et les codes de retour |
+| F2 Fichier TOML | à faire | |
+| F3 Corpus par répertoire | fait | parcours, sous-répertoires, lecture UTF-8 puis latin-1 ; reste l'avertissement pour un dossier inaccessible |
+| F4 Corpus par liste | à faire | |
+| F5 Filtres | à faire | |
+| F6 Chaîne exacte | fait | options casse, accents et mot entier, avec doctests |
+| F7 Expression régulière | à faire | |
+| F8 Nom des fichiers | à faire | |
+| F9 Combinaison de critères | en partie | plusieurs critères de type `mot` ; restent les types `regex` et `nom`, et les modes ET, OU, SAUF |
+| F10 Statistiques | en partie | occurrences par motif ; restent la proportion, la densité et les critères satisfaits |
+| F11 Score et classement | à faire | |
+| F12 Export CSV | en partie | une ligne par document ; restent le BOM, l'ordre du classement et `--tous` |
+| F13 à F21 | à faire | |
