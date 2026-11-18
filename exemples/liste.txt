@@ -1,0 +1,7 @@
+# fichiers à analyser
+cours.txt
+sous_dossier/notes.txt
+
+accents.txt
+cours.txt
+existe_pas.txt
