@@ -58,6 +58,5 @@ def charger_config(fichier_ini):
 
 
 if __name__ == "__main__":
-    print(corpus_depuis_repertoire("exemples"))
     print(corpus_depuis_repertoire("exemples", recursif=True))
     print(lire_fichier("exemples/latin1.txt"))
