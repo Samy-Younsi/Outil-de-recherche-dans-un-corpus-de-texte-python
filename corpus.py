@@ -80,6 +80,8 @@ DEFAUTS = {
                 "mot_entier": False, "approx": 0, "sortie": "resultats.csv"},
 }
 DEFAUT_CRITERE = {"poids": 1, "exclu": False}
+CLES_CRITERE = ["type", "motif", "poids", "exclu"]
+
 
 def charger_config(fichier_toml):
     """Lit un fichier de configuration TOML et renvoie le dictionnaire config (F2).
@@ -91,17 +93,28 @@ def charger_config(fichier_toml):
     {'poids': 2, 'exclu': False, 'type': 'mot', 'motif': 'python'}
     >>> config["options"]["approx"]
     0
+    >>> charger_config("exemples/erreur.toml")
+    Traceback (most recent call last):
+    ...
+    ValueError: Clé inconnue dans [corpus] : recursf
     """
     with open(fichier_toml, "rb") as infile:
         lu = tomllib.load(infile)
 
     config = {}
     for partie in ["corpus", "options"]:
-        config[partie] = dict(DEFAUTS[partie])     # copie des valeurs par défaut
-        config[partie].update(lu.get(partie, {}))  # le fichier écrase les défauts
+        section = lu.get(partie, {})
+        for cle in section:
+            if cle not in DEFAUTS[partie]:
+                raise ValueError(f"Clé inconnue dans [{partie}] : {cle}")
+        config[partie] = dict(DEFAUTS[partie])
+        config[partie].update(section)  # le fichier écrase les défauts
 
     config["criteres"] = []
     for critere in lu.get("criteres", []):
+        for cle in critere:
+            if cle not in CLES_CRITERE:
+                raise ValueError(f"Clé inconnue dans [[criteres]] : {cle}")
         complet = dict(DEFAUT_CRITERE)
         complet.update(critere)
         config["criteres"].append(complet)
