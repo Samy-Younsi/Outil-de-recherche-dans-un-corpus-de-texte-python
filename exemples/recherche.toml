@@ -1,0 +1,20 @@
+# Recherche d'exemple pour le projet
+
+[corpus]
+dossier = "exemples"
+recursif = true
+extensions = [".txt"]
+
+[[criteres]]
+type = "mot"
+motif = "python"
+poids = 2
+
+[[criteres]]
+type = "regex"
+motif = '\d{4}'
+poids = 1
+
+[options]
+mode = "ET"
+sortie = "resultats.csv"

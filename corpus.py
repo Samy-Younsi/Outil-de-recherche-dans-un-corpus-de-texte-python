@@ -5,6 +5,7 @@ Partie d'Aya BEN-TCHICHIA : F2 (lecture du TOML), F3, F4, F5, F13.
 """
 
 import sys
+import tomllib
 from pathlib import Path
 
 
@@ -70,10 +71,41 @@ def lire_fichier(chemin):
     except OSError:
         return ""
 
+# Valeurs utilisées quand le fichier TOML ne précise pas une clé (F2)
+DEFAUTS = {
+    "corpus": {"dossier": None, "liste": None, "recursif": False,
+            "extensions": None, "motif_nom": None, "regex_nom": None,
+            "exclure_dossiers": []},
+    "options": {"mode": "ET", "ignorer_casse": True, "sans_accents": False,
+                "mot_entier": False, "approx": 0, "sortie": "resultats.csv"},
+}
+DEFAUT_CRITERE = {"poids": 1, "exclu": False}
 
 def charger_config(fichier_toml):
-    """Lit le fichier TOML qui décrit une recherche et renvoie le dictionnaire config (F2)."""
-    pass
+    """Lit un fichier de configuration TOML et renvoie le dictionnaire config (F2).
+    Les clés absentes du fichier prennent leur valeur par défaut.
+    >>> config = charger_config("exemples/recherche.toml")
+    >>> config["corpus"]["recursif"]
+    True
+    >>> config["criteres"][0]
+    {'poids': 2, 'exclu': False, 'type': 'mot', 'motif': 'python'}
+    >>> config["options"]["approx"]
+    0
+    """
+    with open(fichier_toml, "rb") as infile:
+        lu = tomllib.load(infile)
+
+    config = {}
+    for partie in ["corpus", "options"]:
+        config[partie] = dict(DEFAUTS[partie])     # copie des valeurs par défaut
+        config[partie].update(lu.get(partie, {}))  # le fichier écrase les défauts
+
+    config["criteres"] = []
+    for critere in lu.get("criteres", []):
+        complet = dict(DEFAUT_CRITERE)
+        complet.update(critere)
+        config["criteres"].append(complet)
+    return config
 
 
 if __name__ == "__main__":
