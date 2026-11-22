@@ -1,0 +1,3 @@
+# Fichier volontairement faux : recursif doit être true ou false
+[corpus]
+recursif = "oui"

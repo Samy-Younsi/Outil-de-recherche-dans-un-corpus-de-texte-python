@@ -81,6 +81,13 @@ DEFAUTS = {
 }
 DEFAUT_CRITERE = {"poids": 1, "exclu": False}
 CLES_CRITERE = ["type", "motif", "poids", "exclu"]
+TYPES = {
+    "corpus": {"dossier": str, "liste": str, "recursif": bool,
+            "extensions": list, "motif_nom": str, "regex_nom": str,
+            "exclure_dossiers": list},
+    "options": {"mode": str, "ignorer_casse": bool, "sans_accents": bool,
+                "mot_entier": bool, "approx": int, "sortie": str},
+}
 
 
 def charger_config(fichier_toml):
@@ -97,6 +104,10 @@ def charger_config(fichier_toml):
     Traceback (most recent call last):
     ...
     ValueError: Clé inconnue dans [corpus] : recursf
+    >>> charger_config("exemples/mauvais_type.toml")
+    Traceback (most recent call last):
+    ...
+    ValueError: Mauvais type pour recursif dans [corpus] : bool attendu
     """
     with open(fichier_toml, "rb") as infile:
         lu = tomllib.load(infile)
@@ -107,6 +118,8 @@ def charger_config(fichier_toml):
         for cle in section:
             if cle not in DEFAUTS[partie]:
                 raise ValueError(f"Clé inconnue dans [{partie}] : {cle}")
+            if not isinstance(section[cle], TYPES[partie][cle]):
+                raise ValueError(f"Mauvais type pour {cle} dans [{partie}] : {TYPES[partie][cle].__name__} attendu")
         config[partie] = dict(DEFAUTS[partie])
         config[partie].update(section)  # le fichier écrase les défauts
 
