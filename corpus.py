@@ -12,9 +12,15 @@ from pathlib import Path
 def corpus_depuis_repertoire(dossier, recursif=False):
     """Renvoie la liste triée des fichiers d'un dossier (F3).
     Si recursif vaut True, on parcourt aussi les sous-dossiers.
+    Un dossier qu'on n'a pas le droit de lire est ignoré avec un avertissement.
     """
     fichiers = []
-    for child in Path(dossier).iterdir():
+    try:
+        contenu = list(Path(dossier).iterdir())
+    except PermissionError:
+        print(f"Attention : {dossier} est inaccessible, il est ignoré", file=sys.stderr)
+        return []
+    for child in contenu:
         if child.is_file():
             fichiers.append(child)
         elif child.is_dir() and recursif:
