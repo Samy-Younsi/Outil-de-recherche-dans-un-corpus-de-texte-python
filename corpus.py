@@ -6,6 +6,8 @@ Partie d'Aya BEN-TCHICHIA : F2 (lecture du TOML), F3, F4, F5, F13.
 
 import sys
 import tomllib
+import re
+import doctest
 from pathlib import Path
 
 
@@ -57,8 +59,43 @@ def filtrer(fichiers, extensions=None, motif_nom=None, regex_nom=None, exclure_d
     extensions : liste comme [".txt"], sans tenir compte de la casse ;
     motif_nom : motif glob comme "rapport_*" ; regex_nom : expression régulière ;
     exclure_dossiers : noms de dossiers à écarter. None veut dire pas de filtre.
+
+    >>> fichiers=corpus_depuis_repertoire("exemples", recursif=True)    # on prend tous les fichiers du dossier exemples et de ses sous-dossiers
+    >>> [p.name for p in filtrer(fichiers, extensions=[".MD"])]
+    ['image.md']
+    >>> [p.name for p in filtrer(fichiers, motif_nom="rapport_*")]        # on ne garde que les fichiers dont le nom commence par "rapport_"
+    ['rapport_2025.txt']
+    >>> [p.name for p in filtrer(fichiers, regex_nom="[0-9]{4}")]          #on  ne garde que les fichiers dont le nom contient 4 chiffres consécutifs
+    ['rapport_2025.txt']
+    >>> [p.name for p in filtrer(fichiers, extensions=[".txt"], exclure_dossiers=["sous_dossier"])]
+    ['accents.txt', 'cours.txt', 'latin1.txt', 'liste.txt', 'rapport_2025.txt', 'vide.txt']
+    >>> len(filtrer(fichiers)) == len(fichiers)         
+    True
     """
-    pass
+    gardes=[]
+    if extensions is not None:
+        extensions = [ext.lower() for ext in extensions]      # on met en minuscule pour ignorer la casse
+    for chemin in fichiers:
+        chemin = Path(chemin)     # on convertit en Path pour pouvoir utiliser .suffix et .name
+        #filtre par extension 
+        if extensions is not None and chemin.suffix.lower() not in extensions:      #on ignore la casse pour les extensions
+            continue
+        #filtre par motif glob
+        if motif_nom is not None and not chemin.match(motif_nom):            #on utilise la méthode match de Path pour les motifs glob
+            continue
+        #filtre par regex
+        if regex_nom is not None and not re.search(regex_nom, chemin.name):       #on utilise re.search pour les regex
+            continue
+        #filtre par dossier à exclure
+        if exclure_dossiers:
+            dans_un_dossier_exclu = False     #on verifie si le fichier est dans un dossier a exclure
+            for dossier in chemin.parent.parts:
+                if dossier in exclure_dossiers:
+                    dans_un_dossier_exclu = True
+            if dans_un_dossier_exclu:
+                continue
+        gardes.append(chemin)     # on garde le fichier par défaut
+    return gardes 
 
 
 def lire_fichier(chemin):
@@ -141,6 +178,4 @@ def charger_config(fichier_toml):
 
 
 if __name__ == "__main__":
-    print(corpus_depuis_repertoire("exemples", recursif=True))
-    print(corpus_depuis_liste("exemples/liste.txt"))
-    print(lire_fichier("exemples/latin1.txt"))
+    doctest.testmod()
