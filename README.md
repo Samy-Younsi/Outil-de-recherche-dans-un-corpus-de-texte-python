@@ -84,6 +84,47 @@ ignorer_casse = true
 sortie = "resultats.csv"
 ```
 
+### Les clés du fichier TOML
+
+Toutes les clés sont facultatives : une clé absente prend sa valeur par défaut. Une clé mal écrite ou une valeur du mauvais type arrête le programme avec un message qui nomme la clé (par exemple `recursif = "oui"` au lieu de `recursif = true`).
+
+Section `[corpus]` : quels fichiers on lit.
+
+| Clé | Type | Défaut | Rôle |
+|---|---|---|---|
+| `dossier` | texte | aucun | dossier à parcourir |
+| `liste` | texte | aucun | fichier qui liste les documents, un chemin par ligne (à la place de `dossier`) |
+| `recursif` | `true` / `false` | `false` | parcourir aussi les sous-dossiers |
+| `extensions` | liste de textes | toutes | extensions gardées, par exemple `[".txt", ".pdf"]`, sans tenir compte des majuscules |
+| `motif_nom` | texte | aucun | motif sur le nom du fichier, avec `*` et `?`, par exemple `"rapport_*"` |
+| `regex_nom` | texte | aucun | expression régulière sur le nom du fichier |
+| `exclure_dossiers` | liste de textes | `[]` | dossiers à ignorer, par exemple `["brouillons"]` |
+
+Sections `[[criteres]]` : un bloc par critère, à répéter autant de fois qu'il faut.
+
+| Clé | Type | Défaut | Rôle |
+|---|---|---|---|
+| `type` | texte | obligatoire | `"mot"`, `"regex"` ou `"nom"` |
+| `motif` | texte | obligatoire | ce qu'on cherche |
+| `poids` | nombre | `1` | importance du critère dans le score |
+| `exclu` | `true` / `false` | `false` | le document ne doit **pas** satisfaire ce critère |
+
+Section `[options]` : comment on cherche et où on écrit le résultat.
+
+| Clé | Type | Défaut | Rôle |
+|---|---|---|---|
+| `mode` | texte | `"ET"` | `"ET"` : tous les critères, `"OU"` : au moins un |
+| `ignorer_casse` | `true` / `false` | `true` | « Python » et « python » sont équivalents |
+| `sans_accents` | `true` / `false` | `false` | « Évry » et « evry » sont équivalents |
+| `mot_entier` | `true` / `false` | `false` | « python » ne correspond pas à « pythonique » |
+| `approx` | nombre entier | `0` | nombre de fautes de frappe tolérées (F14) |
+| `sortie` | texte | `"resultats.csv"` | fichier CSV produit |
+| `coef_criteres` | nombre à virgule | `0.6` | part des critères dans le score (F11) |
+| `coef_densite` | nombre à virgule | `0.4` | part de la densité dans le score (F11) |
+| `plafond_densite` | nombre entier | `20` | densité à partir de laquelle la part de densité est au maximum (F11) |
+
+Deux pièges du format TOML : les textes s'écrivent entre guillemets, et les nombres à virgule avec un point (`0.5`, et `1.0` plutôt que `1` pour un coefficient). Pour une expression régulière, on utilise des apostrophes (`'\d{4}'`), sinon il faut doubler les `\`.
+
 ## Vue d'ensemble des fonctionnalités
 
 Les priorités donnent l'ordre de réalisation :
@@ -346,30 +387,32 @@ La bibliothèque standard couvre le reste :
 
 ## Répartition du travail
 
-| Membre | Fonctionnalités |
-|---|---|
-| Aya BEN-TCHICHIA | F2 (lecture du TOML), F3, F4, F5, F13, F16 |
-| Samy YOUNSI | F6, F7, F8, F9, F14 |
-| Nawel SKENDRAOUI | F1, F10, F11, F12, F15, F17 |
+| Membre | Fonctionnalités | Fichiers | Fonctions |
+|---|---|---|---|
+| Aya BEN-TCHICHIA | F2 (lecture du TOML), F3, F4, F5, F13, F16 | `corpus.py`, `bilan.py`, `exemples/`, `essais/` | `charger_config`, `corpus_depuis_repertoire`, `corpus_depuis_liste`, `filtrer`, `lire_fichier` |
+| Samy YOUNSI | F6, F7, F8, F9, F14 | `recherche.py` | `normaliser`, `chercher_chaine`, `chercher_regex`, `chercher_dans_nom`, `appliquer_criteres` |
+| Nawel SKENDRAOUI | F1, F10, F11, F12, F15, F17 | `main.py`, `stats.py`, `export.py` | `lire_arguments`, `main`, `intervalles_fusionnes`, `proportion_couverte`, `calculer_stats`, `calculer_score`, `cle_de_tri`, `classer`, `exporter_csv` |
+
+Chacun a écrit, testé (doctests) et poussé les fonctions de sa ligne avec son propre compte, ce que montre l'historique git. Chacun peut donc expliquer son propre code. Les fichiers partagés, comme la configuration utilisée par `main.py` et `stats.py`, ont été modifiés en accord avec le groupe.
 
 F18 à F21 seront attribuées selon les disponibilités, une fois P3 terminé.
 
 ## Avancement
 
-État au 16/11/2026. La commande `python main.py exemples -r --mot python -o resultats.csv` fonctionne de bout en bout.
+État au 23/11/2026. La commande `python main.py exemples -r --mot python -o resultats.csv` fonctionne de bout en bout.
 
 | Fonctionnalité | État | Détail |
 |---|---|---|
 | F1 Ligne de commande | en partie | dossier, `-r`, `--mot` (répétable), `-o` ; restent les autres options, les messages d'erreur et les codes de retour |
-| F2 Fichier TOML | en partie | |
-| F3 Corpus par répertoire | fait | parcours, sous-répertoires, lecture UTF-8 puis latin-1 ; reste l'avertissement pour un dossier inaccessible |
+| F2 Fichier TOML | en partie | lecture du fichier, valeurs par défaut, erreur qui nomme la clé inconnue ou la valeur du mauvais type, avec doctests ; reste l'option `--config` dans `main.py` (F1) |
+| F3 Corpus par répertoire | fait | parcours, sous-répertoires, lecture UTF-8 puis latin-1, avertissement pour un dossier inaccessible, avec doctests |
 | F4 Corpus par liste | fait | lignes vides et commentaires `#` ignorés, chemins relatifs au fichier de liste, avertissement pour un chemin inexistant, doublons retirés, avec doctest ; reste l'option `--liste` dans `main.py` (F1) |
-| F5 Filtres | fait | |
+| F5 Filtres | fait | extensions sans tenir compte des majuscules, motif `*` sur le nom, expression régulière sur le nom, dossiers exclus, avec doctests |
 | F6 Chaîne exacte | fait | options casse, accents et mot entier, avec doctests |
-| F7 Expression régulière | à faire | |
-| F8 Nom des fichiers | à faire | |
-| F9 Combinaison de critères | en partie | plusieurs critères de type `mot` ; restent les types `regex` et `nom`, et les modes ET, OU, SAUF |
-| F10 Statistiques | en partie | occurrences par motif ; restent la proportion, la densité et les critères satisfaits |
-| F11 Score et classement | à faire | |
-| F12 Export CSV | en partie | une ligne par document ; restent le BOM, l'ordre du classement et `--tous` |
+| F7 Expression régulière | fait | `chercher_regex` : positions des correspondances, option ignorer la casse, correspondances vides ignorées, erreur claire pour une expression invalide, avec doctests ; restent son appel dans `appliquer_criteres` (F9) et l'option `--regex` (F1) |
+| F8 Nom des fichiers | fait | `chercher_dans_nom` : chaîne ou expression régulière sur le nom du fichier seul (sans le dossier), option ignorer la casse, avec doctests ; restent son appel dans `appliquer_criteres` (F9) et l'option `--nom` (F1) |
+| F9 Combinaison de critères | en partie | plusieurs critères de type `mot` ; modes ET et OU et critères SAUF gérés dans `calculer_stats`, avec doctests ; restent les types `regex` et `nom` dans `appliquer_criteres` |
+| F10 Statistiques | fait | occurrences par motif et au total, proportion du texte couverte (une zone couverte deux fois compte une fois), densité pour 1000 mots, critères satisfaits, avec doctests ; reste à transmettre les critères et les options depuis `main.py` |
+| F11 Score et classement | fait | score sur 100 avec coefficients et plafond de densité réglables dans le TOML, documents non retenus écartés, tri par score puis occurrences puis nom, avec doctests |
+| F12 Export CSV | en partie | une ligne par document dans l'ordre du classement, une colonne par statistique ; restent le BOM et l'option `--tous` dans `main.py` (`classer` la gère déjà) |
 | F13 à F21 | à faire | |
