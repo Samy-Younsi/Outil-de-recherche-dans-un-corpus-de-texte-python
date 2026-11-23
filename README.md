@@ -69,12 +69,12 @@ recursif = true
 extensions = [".txt", ".pdf"]
 exclure_dossiers = ["brouillons"]
 
-[[critere]]
+[[criteres]]
 type = "mot"
 motif = "python"
 poids = 2
 
-[[critere]]
+[[criteres]]
 type = "regex"
 motif = '\d{4}'
 
@@ -116,6 +116,7 @@ F2. Fichier de configuration TOML.
 
    * décrit une recherche complète et réutilisable : corpus, filtres, critères avec leurs poids, options
    * ordre de priorité : ligne de commande, puis fichier, puis valeurs par défaut
+   * les critères donnés en ligne de commande (`--mot`, `--regex`...) s'ajoutent à ceux du fichier ; le mode (`ET` ou `OU`) décide comment ils se combinent
    * une clé inconnue ou une valeur du mauvais type provoque une erreur qui nomme la clé fautive, au lieu d'être ignorée en silence
    * le format `.ini` est écarté : toutes ses valeurs sont des chaînes, alors qu'il nous faut une liste de critères avec des poids numériques
    * nécessite F1
@@ -360,10 +361,10 @@ F18 à F21 seront attribuées selon les disponibilités, une fois P3 terminé.
 | Fonctionnalité | État | Détail |
 |---|---|---|
 | F1 Ligne de commande | en partie | dossier, `-r`, `--mot` (répétable), `-o` ; restent les autres options, les messages d'erreur et les codes de retour |
-| F2 Fichier TOML | à faire | |
-| F3 Corpus par répertoire | en partie | parcours, sous-répertoires, lecture UTF-8 puis latin-1 ; reste l'avertissement pour un dossier inaccessible |
+| F2 Fichier TOML | en partie | |
+| F3 Corpus par répertoire | fait | parcours, sous-répertoires, lecture UTF-8 puis latin-1 ; reste l'avertissement pour un dossier inaccessible |
 | F4 Corpus par liste | fait | lignes vides et commentaires `#` ignorés, chemins relatifs au fichier de liste, avertissement pour un chemin inexistant, doublons retirés, avec doctest ; reste l'option `--liste` dans `main.py` (F1) |
-| F5 Filtres | à faire | |
+| F5 Filtres | fait | |
 | F6 Chaîne exacte | fait | options casse, accents et mot entier, avec doctests |
 | F7 Expression régulière | à faire | |
 | F8 Nom des fichiers | à faire | |
