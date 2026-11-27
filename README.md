@@ -389,7 +389,7 @@ La bibliothèque standard couvre le reste :
 
 | Membre | Fonctionnalités | Fichiers | Fonctions |
 |---|---|---|---|
-| Aya BEN-TCHICHIA | F2 (lecture du TOML), F3, F4, F5, F13, F16 | `corpus.py`, `bilan.py`, `exemples/`, `essais/` | `charger_config`, `corpus_depuis_repertoire`, `corpus_depuis_liste`, `filtrer`, `lire_fichier` |
+| Aya BEN-TCHICHIA | F2 (lecture du TOML), F3, F4, F5, F13, F16 | `corpus.py`, `bilan.py`, `exemples/`, `essais/` | `charger_config`, `corpus_depuis_repertoire`, `corpus_depuis_liste`, `filtrer`, `lire_fichier`, `lire_pdf`, `lire_docx` |
 | Samy YOUNSI | F6, F7, F8, F9, F14 | `recherche.py` | `normaliser`, `chercher_chaine`, `chercher_regex`, `chercher_dans_nom`, `appliquer_criteres` |
 | Nawel SKENDRAOUI | F1, F10, F11, F12, F15, F17 | `main.py`, `stats.py`, `export.py` | `lire_arguments`, `main`, `intervalles_fusionnes`, `proportion_couverte`, `calculer_stats`, `calculer_score`, `cle_de_tri`, `classer`, `exporter_csv` |
 
@@ -415,4 +415,5 @@ F18 à F21 seront attribuées selon les disponibilités, une fois P3 terminé.
 | F10 Statistiques | fait | occurrences par motif et au total, proportion du texte couverte (une zone couverte deux fois compte une fois), densité pour 1000 mots, critères satisfaits, avec doctests ; reste à transmettre les critères et les options depuis `main.py` |
 | F11 Score et classement | fait | score sur 100 avec coefficients et plafond de densité réglables dans le TOML, documents non retenus écartés, tri par score puis occurrences puis nom, avec doctests |
 | F12 Export CSV | en partie | une ligne par document dans l'ordre du classement, une colonne par statistique ; restent le BOM et l'option `--tous` dans `main.py` (`classer` la gère déjà) |
-| F13 à F21 | à faire | |
+| F13 Documents PDF et Word | fait | `.pdf` lus avec pypdf (texte de toutes les pages), `.docx` lus avec python-docx (paragraphes et tableaux), choix selon l'extension sans tenir compte des majuscules ; un PDF scanné ou un fichier abîmé est compté comme illisible avec un avertissement, et une bibliothèque absente n'arrête pas le programme ; avec doctests sur `exemples/cours.pdf`, `exemples/cours.docx` et `exemples/scan.pdf` |
+| F14 à F21 | à faire | |
