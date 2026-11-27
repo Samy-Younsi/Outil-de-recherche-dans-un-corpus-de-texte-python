@@ -10,6 +10,17 @@ import re
 import doctest
 from pathlib import Path
 
+#Bibliotheque externes pour lire les PDF et les Word(F13)
+#si elles ne sont pas installées, ca marche quand meme car les .pdf et .docx sont ignorés avec un avertissement
+try:
+    from pypdf import PdfReader
+except ImportError:
+    PdfReader = None
+try: 
+    from docx import Document
+except ImportError:
+    Document = None
+
 
 def corpus_depuis_repertoire(dossier, recursif=False):
     """Renvoie la liste triée des fichiers d'un dossier (F3).
@@ -99,20 +110,94 @@ def filtrer(fichiers, extensions=None, motif_nom=None, regex_nom=None, exclure_d
 
 
 def lire_fichier(chemin):
-    """Renvoie le texte du fichier (F3).
-    Essaie l'UTF-8, puis le latin-1 en cas d'erreur d'encodage.
+    """Renvoie le texte du fichier (F3, F13).
+    .pdf : texte des pages avec pypdf ; .docx : paragraphes et tableaux avec python-docx ;
+    autres fichiers : UTF-8, puis latin-1 en cas d'erreur d'encodage.
     Renvoie "" si le fichier est illisible.
     >>> lire_fichier("exemples/latin1.txt")
     'Café à Évry, cours de python.'
     >>> lire_fichier("exemples/existe_pas.txt")
     ''
+    >>> "python" in lire_fichier("exemples/cours.docx")
+    True
+    >>> "python" in lire_fichier("exemples/cours.pdf")
+    True
+    >>> lire_fichier("exemples/scan.pdf")
+    ''
     """
+    chemin = Path(chemin)
+    extension = chemin.suffix.lower()
+    # 1. les PDF
+    if extension == ".pdf":
+        if PdfReader is None:
+            print(f"Attention : {chemin} ignoré, pypdf n'est pas installé", file=sys.stderr)
+            return ""
+        try:
+            texte = lire_pdf(chemin)
+        except Exception:
+            print(f"Attention : {chemin} est illisible, il est ignoré", file=sys.stderr)
+            return ""
+        if texte == "":
+            print(f"Attention : {chemin} ne contient pas de texte (PDF scanné ?), il est compté comme illisible", file=sys.stderr)
+        return texte
+    # 2. les Word
+    if extension == ".docx":
+        if Document is None:
+            print(f"Attention : {chemin} ignoré, python-docx n'est pas installé", file=sys.stderr)
+            return ""
+        try:
+            return lire_docx(chemin)
+        except Exception:
+            print(f"Attention : {chemin} est illisible, il est ignoré", file=sys.stderr)
+            return ""
+    # 3. les fichiers texte
     try:
-        return Path(chemin).read_text(encoding="utf-8")
+        return chemin.read_text(encoding="utf-8")
     except UnicodeDecodeError:
-        return Path(chemin).read_text(encoding="latin-1")
+        return chemin.read_text(encoding="latin-1")
     except OSError:
         return ""
+
+
+
+def lire_pdf(chemin):
+    """Renvoie le texte de toutes les pages d'un PDF (F13).
+
+    >>> "python" in lire_pdf("exemples/cours.pdf")
+    True
+    >>> lire_pdf("exemples/scan.pdf")
+    ''
+    """
+    if PdfReader is None:
+        raise ImportError("pypdf n'est pas installé")
+    lecteur = PdfReader(chemin)
+    textes = []
+    for page in lecteur.pages:
+        textes.append(page.extract_text() or "")
+    return "\n".join(textes).strip()
+
+
+def lire_docx(chemin):
+    """Renvoie le texte d'un document Word : paragraphes puis tableaux (F13).
+
+    >>> texte = lire_docx("exemples/cours.docx")
+    >>> "python" in texte
+    True
+    >>> "langage" in texte
+    True
+    """
+    if Document is None:
+        raise ImportError("python-docx n'est pas installé")
+    document = Document(chemin)
+    textes = []
+    for paragraphe in document.paragraphs:
+        textes.append(paragraphe.text)
+    for tableau in document.tables:
+        for ligne in tableau.rows:
+            for case in ligne.cells:
+                textes.append(case.text)
+    return "\n".join(textes)
+
 
 # Valeurs utilisées quand le fichier TOML ne précise pas une clé (F2)
 DEFAUTS = {
@@ -120,7 +205,8 @@ DEFAUTS = {
             "extensions": None, "motif_nom": None, "regex_nom": None,
             "exclure_dossiers": []},
     "options": {"mode": "ET", "ignorer_casse": True, "sans_accents": False,
-                "mot_entier": False, "approx": 0, "sortie": "resultats.csv"},
+                "mot_entier": False, "approx": 0, "sortie": "resultats.csv",
+                "coef_criteres": 0.6, "coef_densite": 0.4, "plafond_densite": 20},
 }
 DEFAUT_CRITERE = {"poids": 1, "exclu": False}
 CLES_CRITERE = ["type", "motif", "poids", "exclu"]
@@ -129,7 +215,8 @@ TYPES = {
             "extensions": list, "motif_nom": str, "regex_nom": str,
             "exclure_dossiers": list},
     "options": {"mode": str, "ignorer_casse": bool, "sans_accents": bool,
-                "mot_entier": bool, "approx": int, "sortie": str},
+                "mot_entier": bool, "approx": int, "sortie": str,
+                "coef_criteres": float, "coef_densite": float, "plafond_densite": int},
 }
 
 
